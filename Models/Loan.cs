@@ -1,6 +1,6 @@
 namespace LibraryManagementSystem.Models;
 
-public class Loan
+public class Loan : IEntity
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public required Guid BookId { get; set; }

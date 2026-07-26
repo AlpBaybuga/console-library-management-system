@@ -1,6 +1,6 @@
 namespace LibraryManagementSystem.Models;
 
-public class Member
+public class Member : IEntity
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public required string FullName { get; set; }
