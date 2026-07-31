@@ -1,3 +1,4 @@
+using LibraryManagementSystem.Exceptions;
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Repositories;
 
@@ -22,17 +23,17 @@ public class LoanService
     public Loan BorrowBook(Guid bookId, Guid memberId)
     {
         var book = _bookService.GetBookById(bookId)
-            ?? throw new InvalidOperationException("Belirtilen Id ile bir kitap bulunamadı.");
+            ?? throw new LibraryException("Belirtilen Id ile bir kitap bulunamadı.");
 
         if (book.IsBorrowed)
-            throw new InvalidOperationException("Bu kitap zaten ödünçte, tekrar ödünç verilemez.");
+            throw new LibraryException("Bu kitap zaten ödünçte, tekrar ödünç verilemez.");
 
         var member = _memberService.GetMemberById(memberId)
-            ?? throw new InvalidOperationException("Belirtilen Id ile bir üye bulunamadı.");
+            ?? throw new LibraryException("Belirtilen Id ile bir üye bulunamadı.");
 
         var activeLoanCount = _loans.GetAll().Count(l => l.MemberId == memberId && l.ReturnDate is null);
         if (activeLoanCount >= MaxActiveLoansPerMember)
-            throw new InvalidOperationException(
+            throw new LibraryException(
                 $"'{member.FullName}' zaten en fazla {MaxActiveLoansPerMember} kitap ödünç almış durumda.");
 
         var loan = new Loan
@@ -51,7 +52,7 @@ public class LoanService
     public Loan ReturnBook(Guid bookId)
     {
         var loan = _loans.GetAll().FirstOrDefault(l => l.BookId == bookId && l.ReturnDate is null)
-            ?? throw new InvalidOperationException("Bu kitaba ait, iade edilmemiş bir ödünç kaydı bulunamadı.");
+            ?? throw new LibraryException("Bu kitaba ait, iade edilmemiş bir ödünç kaydı bulunamadı.");
 
         loan.ReturnDate = DateTime.Now;
 

@@ -1,4 +1,5 @@
 using System.Text;
+using LibraryManagementSystem.Exceptions;
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Services;
 
@@ -47,9 +48,17 @@ public class ConsoleMenu
                     default: Console.WriteLine("Geçersiz seçim, tekrar deneyin."); break;
                 }
             }
-            catch (Exception ex)
+            catch (LibraryException ex)
             {
                 Console.WriteLine($"Hata: {ex.Message}");
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Hata: Girdiğiniz değer beklenen formatta değil (Id veya sayı hatalı olabilir).");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Beklenmeyen bir hata oluştu: {ex.Message}");
             }
 
             if (running)

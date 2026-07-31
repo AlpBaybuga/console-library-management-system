@@ -1,5 +1,6 @@
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Repositories;
+using LibraryManagementSystem.Validation;
 
 namespace LibraryManagementSystem.Services;
 
@@ -14,6 +15,9 @@ public class MemberService
 
     public Member AddMember(string fullName, string email)
     {
+        Validator.ValidateFullName(fullName);
+        Validator.ValidateEmail(email);
+
         var member = new Member
         {
             FullName = fullName,

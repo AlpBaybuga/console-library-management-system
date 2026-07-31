@@ -1,5 +1,7 @@
+using LibraryManagementSystem.Exceptions;
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Repositories;
+using LibraryManagementSystem.Validation;
 
 namespace LibraryManagementSystem.Services;
 
@@ -14,8 +16,13 @@ public class BookService
 
     public Book AddBook(string title, string author, string isbn, int publicationYear, BookCategory category)
     {
+        Validator.ValidateTitle(title);
+        Validator.ValidateAuthor(author);
+        Validator.ValidateIsbn(isbn);
+        Validator.ValidatePublicationYear(publicationYear);
+
         if (_books.GetAll().Any(b => b.ISBN == isbn))
-            throw new InvalidOperationException($"'{isbn}' ISBN numarasına sahip bir kitap zaten kayıtlı.");
+            throw new LibraryException($"'{isbn}' ISBN numarasına sahip bir kitap zaten kayıtlı.");
 
         var book = new Book
         {
@@ -36,8 +43,12 @@ public class BookService
 
     public void UpdateBook(Guid id, string title, string author, int publicationYear, BookCategory category)
     {
+        Validator.ValidateTitle(title);
+        Validator.ValidateAuthor(author);
+        Validator.ValidatePublicationYear(publicationYear);
+
         var book = _books.GetById(id)
-            ?? throw new InvalidOperationException("Belirtilen Id ile bir kitap bulunamadı.");
+            ?? throw new LibraryException("Belirtilen Id ile bir kitap bulunamadı.");
 
         book.Title = title;
         book.Author = author;
@@ -48,10 +59,10 @@ public class BookService
     public void DeleteBook(Guid id)
     {
         var book = _books.GetById(id)
-            ?? throw new InvalidOperationException("Belirtilen Id ile bir kitap bulunamadı.");
+            ?? throw new LibraryException("Belirtilen Id ile bir kitap bulunamadı.");
 
         if (book.IsBorrowed)
-            throw new InvalidOperationException("Ödünçte olan bir kitap silinemez.");
+            throw new LibraryException("Ödünçte olan bir kitap silinemez.");
 
         _books.Remove(id);
     }
