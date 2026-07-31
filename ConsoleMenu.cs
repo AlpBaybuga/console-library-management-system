@@ -8,11 +8,13 @@ public class ConsoleMenu
 {
     private readonly BookService _bookService;
     private readonly MemberService _memberService;
+    private readonly LoanService _loanService;
 
-    public ConsoleMenu(BookService bookService, MemberService memberService)
+    public ConsoleMenu(BookService bookService, MemberService memberService, LoanService loanService)
     {
         _bookService = bookService;
         _memberService = memberService;
+        _loanService = loanService;
     }
 
     public void Run()
@@ -39,6 +41,8 @@ public class ConsoleMenu
                     case "4": DeleteBook(); break;
                     case "5": AddMember(); break;
                     case "6": ListMembers(); break;
+                    case "7": BorrowBook(); break;
+                    case "8": ReturnBook(); break;
                     case "0": running = false; break;
                     default: Console.WriteLine("Geçersiz seçim, tekrar deneyin."); break;
                 }
@@ -66,6 +70,8 @@ public class ConsoleMenu
         Console.WriteLine("4. Kitap Sil");
         Console.WriteLine("5. Üye Ekle");
         Console.WriteLine("6. Üyeleri Listele");
+        Console.WriteLine("7. Kitap Ödünç Ver");
+        Console.WriteLine("8. Kitap İade Al");
         Console.WriteLine("0. Çıkış");
         Console.Write("Seçiminiz: ");
     }
@@ -178,6 +184,27 @@ public class ConsoleMenu
         }
 
         Console.WriteLine(sb.ToString());
+    }
+
+    private void BorrowBook()
+    {
+        Console.Write("Ödünç verilecek kitabın Id'si: ");
+        var bookId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+
+        Console.Write("Üyenin Id'si: ");
+        var memberId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+
+        var loan = _loanService.BorrowBook(bookId, memberId);
+        Console.WriteLine($"Kitap ödünç verildi. İade tarihi: {loan.DueDate:dd.MM.yyyy}");
+    }
+
+    private void ReturnBook()
+    {
+        Console.Write("İade edilecek kitabın Id'si: ");
+        var bookId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+
+        _loanService.ReturnBook(bookId);
+        Console.WriteLine("Kitap iade alındı.");
     }
 
     private static BookCategory ReadCategory()
