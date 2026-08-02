@@ -333,6 +333,11 @@ public class ConsoleMenu
         Console.WriteLine("Kategori seçin: 0-Novel 1-Science 2-History 3-Children 4-Other");
         Console.Write("Kategori: ");
         var input = Console.ReadLine() ?? string.Empty;
-        return (BookCategory)int.Parse(input);
+        var category = (BookCategory)int.Parse(input);
+
+        if (!Enum.IsDefined(category))
+            throw new LibraryException("Geçersiz kategori seçimi. 0-4 arasında bir değer giriniz.");
+
+        return category;
     }
 }

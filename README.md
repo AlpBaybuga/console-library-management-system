@@ -11,8 +11,9 @@ Kitap envanterinin, üye kayıtlarının ve ödünç verme/iade işlemlerinin te
 ## Derleme ve Çalıştırma
 
 ```bash
-# Proje klasörüne girin
-cd ConsoleLibraryManagementSystem
+# Depoyu klonlayın ve klasörüne girin
+git clone https://github.com/AlpBaybuga/console-library-management-system.git
+cd console-library-management-system
 
 # Bağımlılıkları geri yükleyip derleyin
 dotnet build
