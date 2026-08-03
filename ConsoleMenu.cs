@@ -156,7 +156,7 @@ public class ConsoleMenu
 
         if (members.Count == 0)
         {
-            Console.WriteLine("Kayıtlı üye bulunmuyor.");
+            Console.WriteLine("Üye bulunamadı.");
             return;
         }
 
@@ -276,7 +276,7 @@ public class ConsoleMenu
 
         if (list.Count == 0)
         {
-            Console.WriteLine("Sonuç bulunamadı.");
+            Console.WriteLine("Kitap bulunamadı.");
             return;
         }
 
@@ -302,7 +302,7 @@ public class ConsoleMenu
 
         if (list.Count == 0)
         {
-            Console.WriteLine("Sonuç bulunamadı.");
+            Console.WriteLine("Ödünç kaydı bulunamadı.");
             return;
         }
 
