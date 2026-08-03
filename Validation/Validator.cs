@@ -6,6 +6,7 @@ namespace LibraryManagementSystem.Validation;
 public static class Validator
 {
     private static readonly Regex EmailPattern = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled);
+    private static readonly Regex NamePattern = new(@"^[\p{L}][\p{L}\s'.-]*$", RegexOptions.Compiled);
 
     public static void ValidateTitle(string title)
     {
@@ -17,6 +18,9 @@ public static class Validator
     {
         if (string.IsNullOrWhiteSpace(author) || author.Length < 3 || author.Length > 100)
             throw new LibraryException("Yazar adı zorunludur ve 3-100 karakter arasında olmalıdır.");
+
+        if (!NamePattern.IsMatch(author))
+            throw new LibraryException("Yazar adı yalnızca harf içermelidir, sayı veya özel karakter olamaz.");
     }
 
     public static void ValidateIsbn(string isbn)
@@ -35,6 +39,9 @@ public static class Validator
     {
         if (string.IsNullOrWhiteSpace(fullName) || fullName.Length < 3 || fullName.Length > 100)
             throw new LibraryException("Ad soyad zorunludur ve 3-100 karakter arasında olmalıdır.");
+
+        if (!NamePattern.IsMatch(fullName))
+            throw new LibraryException("Ad soyad yalnızca harf içermelidir, sayı veya özel karakter olamaz.");
     }
 
     public static void ValidateEmail(string email)
