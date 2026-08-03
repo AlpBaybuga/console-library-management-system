@@ -35,6 +35,8 @@ public class ConsoleMenu
                 break;
             }
 
+            var hadError = false;
+
             try
             {
                 switch (choice)
@@ -50,26 +52,34 @@ public class ConsoleMenu
                     case "9": FilterAndSearch(); break;
                     case "10": ShowStatistics(); break;
                     case "0": running = false; break;
-                    default: Console.WriteLine("Geçersiz seçim, tekrar deneyin."); break;
+                    default:
+                        Console.WriteLine("Geçersiz seçim, tekrar deneyin.");
+                        hadError = true;
+                        break;
                 }
             }
             catch (LibraryException ex)
             {
                 Console.WriteLine($"Hata: {ex.Message}");
+                hadError = true;
             }
             catch (FormatException)
             {
                 Console.WriteLine("Hata: Girdiğiniz değer beklenen formatta değil (Id veya sayı hatalı olabilir).");
+                hadError = true;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Beklenmeyen bir hata oluştu: {ex.Message}");
+                hadError = true;
             }
 
             if (running)
             {
-                Console.WriteLine("\nDevam etmek için Enter'a basın...");
-                Console.ReadLine();
+                Console.WriteLine(hadError
+                    ? "\nHata oluştu. Devam etmek için herhangi bir tuşa basın..."
+                    : "\nİşlem tamamlandı. Devam etmek için herhangi bir tuşa basın...");
+                Console.ReadKey(true);
             }
         }
     }
