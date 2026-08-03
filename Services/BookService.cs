@@ -14,6 +14,8 @@ public class BookService
         _books = books;
     }
 
+    public bool IsIsbnRegistered(string isbn) => _books.GetAll().Any(b => b.ISBN == isbn);
+
     public Book AddBook(string title, string author, string isbn, int publicationYear, BookCategory category)
     {
         Validator.ValidateTitle(title);
@@ -21,7 +23,7 @@ public class BookService
         Validator.ValidateIsbn(isbn);
         Validator.ValidatePublicationYear(publicationYear);
 
-        if (_books.GetAll().Any(b => b.ISBN == isbn))
+        if (IsIsbnRegistered(isbn))
             throw new LibraryException($"'{isbn}' ISBN numarasına sahip bir kitap zaten kayıtlı.");
 
         var book = new Book

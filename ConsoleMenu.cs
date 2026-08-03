@@ -4,6 +4,7 @@ using LibraryManagementSystem.Extensions;
 using LibraryManagementSystem.Models;
 using LibraryManagementSystem.Services;
 using LibraryManagementSystem.Statistics;
+using LibraryManagementSystem.Validation;
 
 namespace LibraryManagementSystem;
 
@@ -93,18 +94,15 @@ public class ConsoleMenu
 
     private void AddBook()
     {
-        Console.Write("Başlık: ");
-        var title = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("Yazar: ");
-        var author = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("ISBN: ");
-        var isbn = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("Yayın Yılı: ");
-        var year = int.Parse(Console.ReadLine() ?? "0");
-
+        var title = ReadValidated("Başlık: ", Validator.ValidateTitle);
+        var author = ReadValidated("Yazar: ", Validator.ValidateAuthor);
+        var isbn = ReadValidated("ISBN: ", isbn =>
+        {
+            Validator.ValidateIsbn(isbn);
+            if (_bookService.IsIsbnRegistered(isbn))
+                throw new LibraryException($"'{isbn}' ISBN numarasına sahip bir kitap zaten kayıtlı.");
+        });
+        var year = ReadInt("Yayın Yılı: ", Validator.ValidatePublicationYear);
         var category = ReadCategory();
 
         var book = _bookService.AddBook(title, author, isbn, year, category);
@@ -115,18 +113,10 @@ public class ConsoleMenu
 
     private void UpdateBook()
     {
-        Console.Write("Güncellenecek kitabın Id'si: ");
-        var id = Guid.Parse(Console.ReadLine() ?? string.Empty);
-
-        Console.Write("Yeni Başlık: ");
-        var title = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("Yeni Yazar: ");
-        var author = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("Yeni Yayın Yılı: ");
-        var year = int.Parse(Console.ReadLine() ?? "0");
-
+        var id = ReadGuid("Güncellenecek kitabın Id'si: ");
+        var title = ReadValidated("Yeni Başlık: ", Validator.ValidateTitle);
+        var author = ReadValidated("Yeni Yazar: ", Validator.ValidateAuthor);
+        var year = ReadInt("Yeni Yayın Yılı: ", Validator.ValidatePublicationYear);
         var category = ReadCategory();
 
         _bookService.UpdateBook(id, title, author, year, category);
@@ -135,8 +125,7 @@ public class ConsoleMenu
 
     private void DeleteBook()
     {
-        Console.Write("Silinecek kitabın Id'si: ");
-        var id = Guid.Parse(Console.ReadLine() ?? string.Empty);
+        var id = ReadGuid("Silinecek kitabın Id'si: ");
 
         _bookService.DeleteBook(id);
         Console.WriteLine("Kitap silindi.");
@@ -144,11 +133,8 @@ public class ConsoleMenu
 
     private void AddMember()
     {
-        Console.Write("Ad Soyad: ");
-        var fullName = Console.ReadLine() ?? string.Empty;
-
-        Console.Write("E-posta: ");
-        var email = Console.ReadLine() ?? string.Empty;
+        var fullName = ReadValidated("Ad Soyad: ", Validator.ValidateFullName);
+        var email = ReadValidated("E-posta: ", Validator.ValidateEmail);
 
         var member = _memberService.AddMember(fullName, email);
         Console.WriteLine($"'{member.FullName}' adlı üye eklendi. Id: {member.Id}");
@@ -179,11 +165,8 @@ public class ConsoleMenu
 
     private void BorrowBook()
     {
-        Console.Write("Ödünç verilecek kitabın Id'si: ");
-        var bookId = Guid.Parse(Console.ReadLine() ?? string.Empty);
-
-        Console.Write("Üyenin Id'si: ");
-        var memberId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+        var bookId = ReadGuid("Ödünç verilecek kitabın Id'si: ");
+        var memberId = ReadGuid("Üyenin Id'si: ");
 
         var loan = _loanService.BorrowBook(bookId, memberId);
         Console.WriteLine($"Kitap ödünç verildi. İade tarihi: {loan.DueDate:dd.MM.yyyy}");
@@ -191,8 +174,7 @@ public class ConsoleMenu
 
     private void ReturnBook()
     {
-        Console.Write("İade edilecek kitabın Id'si: ");
-        var bookId = Guid.Parse(Console.ReadLine() ?? string.Empty);
+        var bookId = ReadGuid("İade edilecek kitabın Id'si: ");
 
         _loanService.ReturnBook(bookId);
         Console.WriteLine("Kitap iade alındı.");
@@ -200,47 +182,52 @@ public class ConsoleMenu
 
     private void FilterAndSearch()
     {
-        Console.WriteLine("--- Filtrele ve Ara ---");
-        Console.WriteLine("1. Kategoriye göre filtrele");
-        Console.WriteLine("2. Duruma göre filtrele (rafta / ödünçte)");
-        Console.WriteLine("3. Başlık veya yazara göre ara");
-        Console.WriteLine("4. Gecikmiş ödünç kayıtlarını listele");
-        Console.WriteLine("5. Bir üyenin ödünç aldığı kitapları listele");
-        Console.Write("Seçiminiz: ");
-        var choice = Console.ReadLine();
-
-        switch (choice)
+        while (true)
         {
-            case "1":
-                var category = ReadCategory();
-                PrintBooks(_bookService.GetAllBooks().ByCategory(category));
-                break;
+            Console.WriteLine("--- Filtrele ve Ara ---");
+            Console.WriteLine("1. Kategoriye göre filtrele");
+            Console.WriteLine("2. Duruma göre filtrele (rafta / ödünçte)");
+            Console.WriteLine("3. Başlık veya yazara göre ara");
+            Console.WriteLine("4. Gecikmiş ödünç kayıtlarını listele");
+            Console.WriteLine("5. Bir üyenin ödünç aldığı kitapları listele");
+            Console.Write("Seçiminiz: ");
+            var choice = Console.ReadLine();
 
-            case "2":
-                Console.Write("Durum (1: Rafta, 2: Ödünçte): ");
-                var isBorrowed = Console.ReadLine() == "2";
-                PrintBooks(_bookService.GetAllBooks().ByBorrowStatus(isBorrowed));
-                break;
+            switch (choice)
+            {
+                case "1":
+                    var category = ReadCategory();
+                    PrintBooks(_bookService.GetAllBooks().ByCategory(category));
+                    return;
 
-            case "3":
-                Console.Write("Aranacak kelime (başlık veya yazar): ");
-                var keyword = Console.ReadLine() ?? string.Empty;
-                PrintBooks(_bookService.GetAllBooks().SearchByTitleOrAuthor(keyword));
-                break;
+                case "2":
+                    var isBorrowed = ReadInt("Durum (1: Rafta, 2: Ödünçte): ", value =>
+                    {
+                        if (value != 1 && value != 2)
+                            throw new LibraryException("Geçersiz durum seçimi. 1 veya 2 giriniz.");
+                    }) == 2;
+                    PrintBooks(_bookService.GetAllBooks().ByBorrowStatus(isBorrowed));
+                    return;
 
-            case "4":
-                PrintLoans(_loanService.GetAllLoans().Overdue());
-                break;
+                case "3":
+                    Console.Write("Aranacak kelime (başlık veya yazar): ");
+                    var keyword = Console.ReadLine() ?? string.Empty;
+                    PrintBooks(_bookService.GetAllBooks().SearchByTitleOrAuthor(keyword));
+                    return;
 
-            case "5":
-                Console.Write("Üyenin Id'si: ");
-                var memberId = Guid.Parse(Console.ReadLine() ?? string.Empty);
-                PrintLoans(_loanService.GetAllLoans().ByMember(memberId));
-                break;
+                case "4":
+                    PrintLoans(_loanService.GetAllLoans().Overdue());
+                    return;
 
-            default:
-                Console.WriteLine("Geçersiz seçim.");
-                break;
+                case "5":
+                    var memberId = ReadGuid("Üyenin Id'si: ");
+                    PrintLoans(_loanService.GetAllLoans().ByMember(memberId));
+                    return;
+
+                default:
+                    Console.WriteLine("Hata: Geçersiz seçim. 1-5 arasında bir değer giriniz.");
+                    break;
+            }
         }
     }
 
@@ -330,14 +317,74 @@ public class ConsoleMenu
 
     private static BookCategory ReadCategory()
     {
-        Console.WriteLine("Kategori seçin: 0-Novel 1-Science 2-History 3-Children 4-Other");
-        Console.Write("Kategori: ");
-        var input = Console.ReadLine() ?? string.Empty;
-        var category = (BookCategory)int.Parse(input);
+        while (true)
+        {
+            Console.WriteLine("Kategori seçin: 0-Novel 1-Science 2-History 3-Children 4-Other");
+            Console.Write("Kategori: ");
+            var input = Console.ReadLine();
 
-        if (!Enum.IsDefined(category))
-            throw new LibraryException("Geçersiz kategori seçimi. 0-4 arasında bir değer giriniz.");
+            if (int.TryParse(input, out var value) && Enum.IsDefined(typeof(BookCategory), value))
+                return (BookCategory)value;
 
-        return category;
+            Console.WriteLine("Hata: Geçersiz kategori seçimi. 0-4 arasında bir değer giriniz.\n");
+        }
+    }
+
+    private static string ReadValidated(string prompt, Action<string> validate)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            var input = Console.ReadLine() ?? string.Empty;
+
+            try
+            {
+                validate(input);
+                return input;
+            }
+            catch (LibraryException ex)
+            {
+                Console.WriteLine($"Hata: {ex.Message}\n");
+            }
+        }
+    }
+
+    private static int ReadInt(string prompt, Action<int>? validate = null)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            var input = Console.ReadLine();
+
+            if (!int.TryParse(input, out var value))
+            {
+                Console.WriteLine("Hata: Geçerli bir sayı giriniz.\n");
+                continue;
+            }
+
+            try
+            {
+                validate?.Invoke(value);
+                return value;
+            }
+            catch (LibraryException ex)
+            {
+                Console.WriteLine($"Hata: {ex.Message}\n");
+            }
+        }
+    }
+
+    private static Guid ReadGuid(string prompt)
+    {
+        while (true)
+        {
+            Console.Write(prompt);
+            var input = Console.ReadLine();
+
+            if (Guid.TryParse(input, out var value))
+                return value;
+
+            Console.WriteLine("Hata: Geçerli bir Id (Guid) giriniz.\n");
+        }
     }
 }
