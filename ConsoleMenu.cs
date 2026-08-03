@@ -35,7 +35,7 @@ public class ConsoleMenu
                 break;
             }
 
-            var hadError = false;
+            var continuePrefix = "İşlem tamamlandı.";
 
             try
             {
@@ -51,34 +51,42 @@ public class ConsoleMenu
                     case "8": ReturnBook(); break;
                     case "9": FilterAndSearch(); break;
                     case "10": ShowStatistics(); break;
-                    case "0": running = false; break;
+                    case "0":
+                        if (ConfirmExit())
+                            running = false;
+                        else
+                            continuePrefix = "İşlem iptal edildi.";
+                        break;
                     default:
                         Console.WriteLine("Geçersiz seçim, tekrar deneyin.");
-                        hadError = true;
+                        continuePrefix = "Hata oluştu.";
                         break;
                 }
+            }
+            catch (GoBackException)
+            {
+                Console.WriteLine("İşlem iptal edildi, ana menüye dönülüyor.");
+                continuePrefix = "İşlem iptal edildi.";
             }
             catch (LibraryException ex)
             {
                 Console.WriteLine($"Hata: {ex.Message}");
-                hadError = true;
+                continuePrefix = "Hata oluştu.";
             }
             catch (FormatException)
             {
                 Console.WriteLine("Hata: Girdiğiniz değer beklenen formatta değil (Id veya sayı hatalı olabilir).");
-                hadError = true;
+                continuePrefix = "Hata oluştu.";
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Beklenmeyen bir hata oluştu: {ex.Message}");
-                hadError = true;
+                continuePrefix = "Hata oluştu.";
             }
 
             if (running)
             {
-                Console.WriteLine(hadError
-                    ? "\nHata oluştu. Devam etmek için herhangi bir tuşa basın..."
-                    : "\nİşlem tamamlandı. Devam etmek için herhangi bir tuşa basın...");
+                Console.WriteLine($"\n{continuePrefix} Devam etmek için herhangi bir tuşa basın...");
                 Console.ReadKey(true);
             }
         }
@@ -100,6 +108,43 @@ public class ConsoleMenu
         Console.WriteLine("10. İstatistikleri Görüntüle");
         Console.WriteLine("0. Çıkış");
         Console.Write("Seçiminiz: ");
+    }
+
+    private static bool ConfirmExit()
+    {
+        while (true)
+        {
+            Console.Write("Kapatmak istediğinize emin misiniz? (E/H): ");
+            var input = Console.ReadLine()?.Trim().ToUpperInvariant();
+
+            if (input == "E" || input == "EVET")
+                return true;
+            if (input == "H" || input == "HAYIR")
+                return false;
+
+            Console.WriteLine("Hata: Lütfen 'E' veya 'H' giriniz.\n");
+        }
+    }
+
+    private sealed class GoBackException : Exception
+    {
+    }
+
+    private static string? ReadLineOrGoBack(string prompt)
+    {
+        Console.Write(prompt);
+        var input = Console.ReadLine();
+
+        if (string.Equals(input?.Trim(), "geri", StringComparison.OrdinalIgnoreCase))
+            throw new GoBackException();
+
+        return input;
+    }
+
+    private static string WithCancelHint(string prompt)
+    {
+        var trimmed = prompt.TrimEnd().TrimEnd(':');
+        return $"{trimmed} (iptal: 'geri'): ";
     }
 
     private void AddBook()
@@ -200,8 +245,8 @@ public class ConsoleMenu
             Console.WriteLine("3. Başlık veya yazara göre ara");
             Console.WriteLine("4. Gecikmiş ödünç kayıtlarını listele");
             Console.WriteLine("5. Bir üyenin ödünç aldığı kitapları listele");
-            Console.Write("Seçiminiz: ");
-            var choice = Console.ReadLine();
+            Console.WriteLine("6. Geri");
+            var choice = ReadLineOrGoBack("Seçiminiz: ");
 
             switch (choice)
             {
@@ -220,8 +265,7 @@ public class ConsoleMenu
                     return;
 
                 case "3":
-                    Console.Write("Aranacak kelime (başlık veya yazar): ");
-                    var keyword = Console.ReadLine() ?? string.Empty;
+                    var keyword = ReadLineOrGoBack(WithCancelHint("Aranacak kelime (başlık veya yazar): ")) ?? string.Empty;
                     PrintBooks(_bookService.GetAllBooks().SearchByTitleOrAuthor(keyword));
                     return;
 
@@ -234,8 +278,11 @@ public class ConsoleMenu
                     PrintLoans(_loanService.GetAllLoans().ByMember(memberId));
                     return;
 
+                case "6":
+                    throw new GoBackException();
+
                 default:
-                    Console.WriteLine("Hata: Geçersiz seçim. 1-5 arasında bir değer giriniz.");
+                    Console.WriteLine("Hata: Geçersiz seçim. 1-6 arasında bir değer giriniz.");
                     break;
             }
         }
@@ -330,8 +377,7 @@ public class ConsoleMenu
         while (true)
         {
             Console.WriteLine("Kategori seçin: 0-Novel 1-Science 2-History 3-Children 4-Other");
-            Console.Write("Kategori: ");
-            var input = Console.ReadLine();
+            var input = ReadLineOrGoBack("Kategori (iptal: 'geri'): ");
 
             if (int.TryParse(input, out var value) && Enum.IsDefined(typeof(BookCategory), value))
                 return (BookCategory)value;
@@ -344,8 +390,7 @@ public class ConsoleMenu
     {
         while (true)
         {
-            Console.Write(prompt);
-            var input = Console.ReadLine() ?? string.Empty;
+            var input = ReadLineOrGoBack(WithCancelHint(prompt)) ?? string.Empty;
 
             try
             {
@@ -363,8 +408,7 @@ public class ConsoleMenu
     {
         while (true)
         {
-            Console.Write(prompt);
-            var input = Console.ReadLine();
+            var input = ReadLineOrGoBack(WithCancelHint(prompt));
 
             if (!int.TryParse(input, out var value))
             {
@@ -388,8 +432,7 @@ public class ConsoleMenu
     {
         while (true)
         {
-            Console.Write(prompt);
-            var input = Console.ReadLine();
+            var input = ReadLineOrGoBack(WithCancelHint(prompt));
 
             if (Guid.TryParse(input, out var value))
                 return value;
