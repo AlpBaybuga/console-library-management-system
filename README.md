@@ -32,7 +32,9 @@ dotnet run
 - Kategoriye göre filtreleme, duruma göre (rafta/ödünçte) filtreleme, başlık veya yazara göre arama
 - Gecikmiş ödünç kayıtlarının listelenmesi ve belirli bir üyenin ödünç aldığı kitapların listelenmesi
 - İstatistikler: toplam kitap/üye sayısı, kategoriye göre dağılım, rafta/ödünçteki kitap sayısı, gecikmiş kayıt sayısı, en çok ödünç alınan kitap ve kategori
-- Hatalı girişlerde uygulama çökmez; anlamlı bir hata mesajı gösterip menüye geri döner
+- Hatalı girişlerde uygulama çökmez; anlamlı bir hata mesajı gösterip aynı adımı tekrar sorar (ilgili alanı düzeltince işleme kaldığı yerden devam edilir)
+- Herhangi bir veri girme adımında `geri` yazarak işlem iptal edilip ana menüye dönülebilir; Filtrele ve Ara menüsünde ayrıca numaralı "Geri" seçeneği bulunur
+- Ana menüden çıkarken onay istenir ("Kapatmak istediğinize emin misiniz?")
 
 ## Menü Kullanımına Örnek Akış
 
@@ -50,15 +52,15 @@ dotnet run
 10. İstatistikleri Görüntüle
 0. Çıkış
 Seçiminiz: 1
-Başlık: 1984
-Yazar: George Orwell
-ISBN: 978-0451524935
-Yayın Yılı: 1949
+Başlık (iptal: 'geri'): 1984
+Yazar (iptal: 'geri'): George Orwell
+ISBN (iptal: 'geri'): 978-0451524935
+Yayın Yılı (iptal: 'geri'): 1949
 Kategori seçin: 0-Novel 1-Science 2-History 3-Children 4-Other
-Kategori: 0
+Kategori (iptal: 'geri'): 0
 '1984' adlı kitap eklendi. Id: 3f2a1c9e-....
 
-Devam etmek için Enter'a basın...
+İşlem tamamlandı. Devam etmek için herhangi bir tuşa basın...
 ```
 
 Kitap ve üye eklerken dönen `Id` (Guid) değerleri, o kitabı/üyeyi ödünç verme, iade alma, güncelleme veya silme işlemlerinde kullanılır.
@@ -68,3 +70,4 @@ Kitap ve üye eklerken dönen `Id` (Guid) değerleri, o kitabı/üyeyi ödünç 
 - Veriler yalnızca bellekte tutulur; kalıcı depolama (dosya, veritabanı) yoktur.
 - Kitap/üye/ödünç kayıtları arasındaki ilişkiler Id (Guid) üzerinden kurulur.
 - Konsol arayüzü basit metin girişine dayanır; girilen Id'lerin listeleme ekranından kopyalanarak kullanılması beklenir.
+- `geri` kelimesi, veri girme adımlarında işlemi iptal etmek için ayrılmış bir anahtar kelimedir; bir kitabın başlığı veya yazarı olarak gerçekten "geri" yazılmak istenirse bu adımda iptal olarak yorumlanır.
