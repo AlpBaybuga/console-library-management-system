@@ -19,12 +19,15 @@ public static class LibraryStatistics
 
     public static Book? MostBorrowedBook(IEnumerable<Loan> loans, IEnumerable<Book> books)
     {
+        var bookLookup = books.ToDictionary(b => b.Id);
+
         var bestGroup = loans
+            .Where(l => bookLookup.ContainsKey(l.BookId))
             .GroupBy(l => l.BookId)
             .OrderByDescending(g => g.Count())
             .FirstOrDefault();
 
-        return bestGroup is null ? null : books.FirstOrDefault(b => b.Id == bestGroup.Key);
+        return bestGroup is null ? null : bookLookup[bestGroup.Key];
     }
 
     public static BookCategory? MostBorrowedCategory(IEnumerable<Loan> loans, IEnumerable<Book> books)
